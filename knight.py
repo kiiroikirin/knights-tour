@@ -155,9 +155,10 @@ class Board:
     def printMoves(self):
         """print the moves made by the knight"""
         print("Moves made:")
-        for i, move in enumerate(self.moves):
-            print(f"{i}: {move}")
+        indexed_moves = zip(range(len(self.moves)), self.moves)
+        print(list(indexed_moves))
         print(f"Total moves: {self.moveCount}")
+
 
 class Knight:
     def __init__(self, N=8, M=7):
