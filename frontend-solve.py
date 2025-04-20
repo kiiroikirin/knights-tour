@@ -70,7 +70,7 @@ class KnightsTourGUI:
             print("Click 'Solve' and then select a starting square.")
 
     def animate_solution(self):
-        if self.knight.solve():
+        if self.knight.solve_closed_tour():
             self.knight.board.printBoard()
             self.knight.board.printMoves()
             for i, (x, y) in enumerate(self.knight.board.moves):

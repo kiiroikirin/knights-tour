@@ -1,4 +1,4 @@
-"""knight.py
+"""knights.py
 a program to solve an NxM knights tour board
 input: starting square
 output: sequence of moves
@@ -19,44 +19,45 @@ class Cell:
         """String representation of the cell"""
         return 'X' if self.visited else '.'
 
-    def is_knight_move(self, x, y):
-        """Check if the cell is a valid knight's move from given position"""
-        dx = abs(x - self.x)
-        dy = abs(y - self.y)
+    def is_knight_move(self, knight):
+        """Check if the cell is a valid knight's move from knight's position"""
+        dx = abs(knight.x - self.x)
+        dy = abs(knight.y - self.y)
         return (dx == 2 and dy == 1) or (dx == 1 and dy == 2)
 
 class Board:
-    def __init__(self, rows, cols):
+    def __init__(self, rows, cols, start_x=0, start_y=0):
         """create a board of size NxM"""
         self.rows = rows
         self.cols = cols
         self.board = [[Cell(row, col) for col in range(cols)] for row in range(rows)]
-        self.x = 0  # knight's x coordinate
-        self.y = 0  # knight's y coordinate
-        self.start_x = 0  # starting position for closed tour
-        self.start_y = 0
+        self.x = start_x  # knight's x coordinate
+        self.y = start_y  # knight's y coordinate
+        self.start_x = start_x  # remember starting position for closed tour
+        self.start_y = start_y
         self.moveCount = 0
-        self.moves = []  # Don't add starting position yet
-    
-    def set_start_position(self, x, y):
-        """Set the starting position of the knight"""
-        if 0 <= x < self.rows and 0 <= y < self.cols:
-            self.x = x
-            self.y = y
-            self.start_x = x
-            self.start_y = y
-            self.board[x][y].mark_visited()
-            self.moves = [(x, y)]  # Set starting position
-            self.moveCount = 0
-            return True
-        return False
+        self.board[self.x][self.y].mark_visited()
+        self.moves = [(self.x, self.y)]  # Include starting position in moves
     
     def get_cell(self, x, y):
         """Retrieve a specific cell on the board"""
         if 0 <= x < self.rows and 0 <= y < self.cols:
             return self.board[x][y]
         else:
-            return None  # Return None for out of bounds
+            return None  # Return None for out of bounds instead of raising error
+
+    def check_move(self, x, y):
+        """Check if the knight can move to a specific cell"""
+        cell = self.get_cell(x, y)
+        if cell is None:
+            return False
+        if cell.visited:
+            return False
+        
+        # Check if this is a valid knight's move
+        dx = abs(self.x - x)
+        dy = abs(self.y - y)
+        return (dx == 2 and dy == 1) or (dx == 1 and dy == 2)
     
     def get_available_moves(self):
         """Get all available moves for the knight"""
@@ -68,10 +69,10 @@ class Board:
                 moves.append((new_x, new_y))
         return moves
 
-    def get_available_moves_from(self, pos):
-        """Get all available moves from a specific position"""
-        x, y = pos
+    def get_available_moves_from(self, cell):
+        """Get all available moves from a specific cell"""
         moves = []
+        x, y = cell
         for dx, dy in [(2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2)]:
             new_x = x + dx
             new_y = y + dy
@@ -108,40 +109,23 @@ class Board:
         
         return all_visited
     
-    def reset(self):
-        """Reset the board"""
-        for row in self.board:
-            for cell in row:
-                cell.visited = False
-        self.moveCount = 0
-        self.moves = []
-    
     def undo_move(self):
         """undo the knight's last move"""
         if len(self.moves) <= 1:  # Don't remove the starting position
             return False
         
-        self.board[self.x][self.y].visited = False
         self.moves.pop()  # Remove current position
-        self.x, self.y = self.moves[-1]  # Get the previous position
+        prev_x, prev_y = self.moves[-1]  # Get the previous position
+        
+        self.board[self.x][self.y].visited = False
+        self.x, self.y = prev_x, prev_y
         self.moveCount -= 1
         
         return True
 
     def move(self, x, y):
         """move the knight to a new square"""
-        # Check if in bounds
-        if not (0 <= x < self.rows and 0 <= y < self.cols):
-            return False
-            
-        # Check if unvisited
-        if self.board[x][y].visited:
-            return False
-            
-        # Check if valid knight move
-        dx = abs(self.x - x)
-        dy = abs(self.y - y)
-        if not ((dx == 2 and dy == 1) or (dx == 1 and dy == 2)):
+        if not self.check_move(x, y):
             return False
         
         self.x = x
@@ -155,57 +139,38 @@ class Board:
     def printMoves(self):
         """print the moves made by the knight"""
         print("Moves made:")
-        for i, move in enumerate(self.moves):
-            print(f"{i}: {move}")
+        indexed_moves = zip(range(len(self.moves)), self.moves)
+        print(list(indexed_moves))
         print(f"Total moves: {self.moveCount}")
 
 class Knight:
-    def __init__(self, N=8, M=7):
-        self.board = Board(N, M)
-
-    def set_start_position(self, x, y):
-        """Set the starting position for the knight"""
-        return self.board.set_start_position(x, y)
+    def __init__(self, N=8, M=7, start_x=0, start_y=0):
+        self.board = Board(N, M, start_x, start_y)
 
     def move(self, x, y):
         """move the knight to a new square"""
         return self.board.move(x, y)
+
+    def encode_board(self):
+        """encodes the board state as a string"""
+        board_str = ""
+        for row in self.board.board:
+            for cell in row:
+                board_str += "1" if cell.visited else "0"
+        return board_str
         
-    def solve_closed_tour(self):
-        """Solve for a closed knight's tour"""
-        # Check if start position has been set
-        if not self.board.moves:
-            return False
-            
-        return self._solve(True)
-    
-    def solve(self):
-        """Solve for an open knight's tour"""
-        # Check if start position has been set
-        if not self.board.moves:
-            return False
-            
-        return self._solve(False)
-        
-    def _solve(self, tour=False):
-        """Solve the knight's tour using Warnsdorff's heuristic"""
-        # Check if we've visited all cells
+    def solve(self, tour=False):
+        """solve the knights tour using Warnsdorff's heuristic"""
+        # Check if we've already visited all cells
         total_cells = self.board.rows * self.board.cols
         
         if self.board.moveCount == total_cells - 1:
-            # We're visiting the last cell
-            if not tour:
-                return True
-                
-            # For closed tour, check if we can get back to start
-            last_x, last_y = self.board.x, self.board.y
-            dx = abs(last_x - self.board.start_x)
-            dy = abs(last_y - self.board.start_y)
-            if (dx == 2 and dy == 1) or (dx == 1 and dy == 2):
+            # We've visited all cells except the current one
+            if not tour or self.board.isSolved(tour):
                 return True
             return False
         
-        # Warnsdorff's heuristic: sort moves by fewest onward moves
+        # Warnsdorff's heuristic: sort moves by number of onward moves (fewer first)
         moves = self.board.get_available_moves()
         if not moves:
             return False
@@ -215,20 +180,33 @@ class Knight:
         
         for move_x, move_y in moves:
             if self.board.move(move_x, move_y):
-                if self._solve(tour):
+                if self.solve(tour):
                     return True
                 self.board.undo_move()
         
         return False
 
+    def solve_closed_tour(self):
+        """Specifically solve for a closed knights tour"""
+        return self.solve(tour=True)
+
 if __name__ == '__main__':
-    # Test the knight's tour solver
-    knight = Knight(5, 5)
-    knight.set_start_position(0, 0)
+    # Create a knight on a 7x8 board
+    player = Knight(7, 8)
+    print("Initial board:")
+    player.board.printBoard()
     
-    if knight.solve_closed_tour():
-        print("Solution found!")
-        knight.board.printBoard()
-        knight.board.printMoves()
+    #print("\nSolving for closed tour...")
+    #found = player.solve_closed_tour()
+    
+    print("\nSolving for any tour...")
+    found = player.solve()
+
+    print("\nFinal board:")
+    player.board.printBoard()
+    
+    if found:
+        print("\nSolution found!")
+        player.board.printMoves()
     else:
-        print("No solution exists from the given starting position")
+        print("\nNo solution found for a closed tour from the starting position")
