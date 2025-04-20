@@ -8,6 +8,10 @@ to run simply use `knight-claude-gui.py`. this uses a frontend using the `tkinte
 
 currently `knight.py` uses a recursive dfs implementation with the Warnsdorff's heuristic. the code uses oop with classes of `Knight`, `Board` and `Cell`.
 
+# features 
+
+solves NxM board with non-closed and closed tours.
+
 # future work
 
 implement neural networks solution
