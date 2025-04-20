@@ -10,7 +10,11 @@ currently `knight.py` uses a recursive dfs implementation with the Warnsdorff's 
 
 # features 
 
-solves NxM board with non-closed and closed tours.
+- solves NxM board
+- solves closed and non-closed tours
+- single player mode
+- labelled grid
+- arbitrary start positions
 
 # future work
 
