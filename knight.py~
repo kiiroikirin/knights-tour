@@ -1,0 +1,8 @@
+"""knights.py
+a program to solve an NxM knights tour board
+input: starting square
+output: sequence of moves
+"""
+
+
+
